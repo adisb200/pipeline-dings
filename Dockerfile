@@ -1,9 +1,19 @@
-FROM eclipse-temurin:21-jre
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
-COPY target/*.jar app.jar
+COPY package*.json ./
 
-EXPOSE 8080
+RUN npm ci
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+COPY . .
+
+RUN npm run build
+
+FROM nginx:alpine
+
+COPY --from=build /app/build /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
